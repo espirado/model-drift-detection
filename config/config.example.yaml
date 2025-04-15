@@ -1,0 +1,54 @@
+# Model Drift Detection Configuration
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    input: "feature-stream"
+    metrics: "drift-metrics"
+    alerts: "drift-alerts"
+
+preprocessing:
+  missing_value_strategy: "median"
+  outlier_strategy: "clip"
+  outlier_threshold: 3.0
+
+features:
+  window_size: 500
+  metrics:
+    - "mean"
+    - "std"
+    - "js_divergence"
+  numeric_features:
+    - "feature1"
+    - "feature2"
+  categorical_features:
+    - "feature3"
+
+drift_detection:
+  feature1:
+    metrics:
+      mean_shift:
+        warning_threshold: 1.5
+        critical_threshold: 3.0
+      js_divergence:
+        warning_threshold: 0.1
+        critical_threshold: 0.2
+  feature2:
+    metrics:
+      mean_shift:
+        warning_threshold: 1.5
+        critical_threshold: 3.0
+      js_divergence:
+        warning_threshold: 0.1
+        critical_threshold: 0.2
+  feature3:
+    metrics:
+      js_divergence:
+        warning_threshold: 0.1
+        critical_threshold: 0.2
+
+alerts:
+  cooldown_period: 300  # seconds
+  notification_channels:
+    kafka: true
+    console: true
