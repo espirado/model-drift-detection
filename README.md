@@ -53,4 +53,3 @@ The system follows a modular design with separate components for data ingestion,
 ## Getting Started
 
 See the documentation directory for setup instructions and usage examples.
-# model-drift-detection
