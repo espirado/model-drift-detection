@@ -38,3 +38,7 @@ data/raw/
 data/processed/
 logs/
 config/config.yaml
+datasets/
+models/
+results/
+

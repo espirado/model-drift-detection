@@ -1,278 +1,246 @@
 # Usage Guide
 
-This guide explains how to use the System Reliability Drift Detection project for monitoring system reliability using log data.
+This guide provides detailed instructions for using the Model Drift Detection system for analyzing system logs and detecting drift patterns.
 
-## Basic Usage
+## Data Processing Workflow
 
-### 1. Log Ingestion
+### 1. Data Preprocessing
 
-The system can ingest logs from various sources:
+The preprocessing phase converts raw logs into structured data suitable for analysis:
 
 ```python
-from src.ingestion.log_loader import LogLoader
+from src.preprocessing import log_processor
+from src.config import config
 
-# Load logs from a file
-loader = LogLoader()
-loader.load_from_file("data/raw/HDFS/HDFS.log")
+# Initialize processor
+processor = log_processor.LogProcessor(config.get_config())
 
-# Stream logs to Kafka
-loader.stream_to_kafka(topic="hdfs_logs")
+# Process logs
+processed_data = processor.process_logs(
+    log_type="HDFS",  # Options: HDFS, Apache, HealthApp, BGL, HPC, Linux, Mac
+    input_path="datasets/raw_drift_dataset/HDFS",
+    output_path="datasets/processed/hdfs_processed.csv"
+)
 ```
 
-### 2. Log Parsing
+### 2. Feature Engineering
 
-Parse logs into structured formats:
-
-```python
-from src.parsing.log_parser import LogParser
-
-# Initialize parser
-parser = LogParser()
-
-# Parse logs
-parsed_logs = parser.parse("data/raw/HDFS/HDFS.log")
-
-# Save parsed logs
-parser.save_parsed_logs(parsed_logs, "data/processed/HDFS_parsed.csv")
-```
-
-### 3. Feature Extraction
-
-Extract features from parsed logs:
+Extract relevant features from processed logs:
 
 ```python
-from src.parsing.feature_extractor import FeatureExtractor
+from src.features import feature_extractor
 
 # Initialize feature extractor
-extractor = FeatureExtractor()
+extractor = feature_extractor.LogFeatureExtractor()
 
 # Extract features
-features = extractor.extract(parsed_logs)
-
-# Save features
-extractor.save_features(features, "data/processed/HDFS_features.csv")
+features = extractor.extract_features(
+    processed_data,
+    time_window='1H',  # Options: '1H', '1D', '1W'
+    include_patterns=True,
+    include_components=True
+)
 ```
 
-### 4. Drift Detection
+### 3. Drift Detection
 
-Detect drift in log patterns:
+Implement drift detection on extracted features:
 
 ```python
-from src.detection.distribution_drift import DistributionDriftDetector
-from src.detection.error_rate_drift import ErrorRateDriftDetector
+from src.detection import drift_detector
 
-# Initialize detectors
-dist_detector = DistributionDriftDetector()
-error_detector = ErrorRateDriftDetector()
+# Initialize detector
+detector = drift_detector.DriftDetector(
+    baseline_period='7D',
+    detection_window='1D'
+)
 
-# Detect distribution drift
-dist_drift = dist_detector.detect(features)
-
-# Detect error rate drift
-error_drift = error_detector.detect(parsed_logs)
-
-# Get drift alerts
-alerts = dist_detector.get_alerts() + error_detector.get_alerts()
+# Detect drift
+drift_results = detector.detect_drift(
+    features,
+    metrics=['error_rate', 'pattern_distribution', 'component_activity']
+)
 ```
 
-### 5. Visualization
+### 4. Visualization
 
-Visualize drift detection results:
+Visualize results using the dashboard:
 
 ```python
-from src.visualization.dashboard import Dashboard
-from src.visualization.metrics_visualizer import MetricsVisualizer
+from src.dashboard import visualization
 
-# Initialize visualizers
-dashboard = Dashboard()
-visualizer = MetricsVisualizer()
+# Initialize dashboard
+dashboard = visualization.DriftDashboard()
 
-# Create dashboard
-dashboard.create()
-
-# Visualize metrics
-visualizer.plot_error_rate(parsed_logs)
-visualizer.plot_distribution_drift(dist_drift)
+# Display results
+dashboard.plot_drift_metrics(drift_results)
+dashboard.plot_temporal_patterns(features)
+dashboard.plot_component_distribution(features)
 ```
 
-## Advanced Usage
+## Common Use Cases
 
-### Custom Log Parsing
+### 1. System Health Monitoring
 
-Create a custom log parser for specific log formats:
-
-```python
-from src.parsing.log_parser import BaseLogParser
-
-class CustomLogParser(BaseLogParser):
-    def parse_line(self, line):
-        # Custom parsing logic
-        parts = line.split("|")
-        return {
-            "timestamp": parts[0],
-            "component": parts[1],
-            "severity": parts[2],
-            "message": parts[3]
-        }
-
-# Use custom parser
-parser = CustomLogParser()
-parsed_logs = parser.parse("data/raw/custom_logs.log")
-```
-
-### Custom Drift Detection
-
-Implement a custom drift detection algorithm:
+Monitor system health through log pattern analysis:
 
 ```python
-from src.detection.distribution_drift import BaseDriftDetector
-
-class CustomDriftDetector(BaseDriftDetector):
-    def detect(self, data):
-        # Custom drift detection logic
-        # ...
-        return drift_results
-
-# Use custom detector
-detector = CustomDriftDetector()
-drift = detector.detect(features)
-```
-
-### Real-time Monitoring
-
-Set up real-time monitoring of system logs:
-
-```python
-from src.ingestion.kafka_producer import KafkaProducer
-from src.detection.pattern_drift import PatternDriftDetector
-from src.visualization.alert_manager import AlertManager
-
-# Initialize components
-producer = KafkaProducer()
-detector = PatternDriftDetector()
-alert_manager = AlertManager()
-
-# Set up real-time monitoring
-def process_log(log):
-    # Process incoming log
-    parsed_log = parser.parse_line(log)
-    
-    # Detect drift
-    drift = detector.detect_incremental(parsed_log)
-    
-    # Send alert if drift detected
-    if drift.is_drift_detected:
-        alert_manager.send_alert(drift)
+# Configure monitoring
+monitor = system_monitor.HealthMonitor(
+    check_interval='1H',
+    alert_threshold=0.8
+)
 
 # Start monitoring
-producer.consume_topic("system_logs", process_log)
+monitor.start_monitoring(
+    log_sources=['HDFS', 'Apache'],
+    metrics=['error_rate', 'response_time']
+)
 ```
 
-## Configuration
+### 2. Error Pattern Analysis
 
-### Kafka Configuration
-
-Edit `config/kafka_config.yaml`:
-
-```yaml
-kafka:
-  bootstrap_servers: localhost:9092
-  topics:
-    hdfs_logs: hdfs_logs
-    apache_logs: apache_logs
-    healthapp_logs: healthapp_logs
-    ssh_logs: ssh_logs
-```
-
-### Drift Detection Configuration
-
-Edit `config/detection_config.yaml`:
-
-```yaml
-detection:
-  window_size: 1000
-  threshold: 0.05
-  methods:
-    distribution:
-      enabled: true
-      algorithm: jensen_shannon
-    error_rate:
-      enabled: true
-      min_errors: 5
-    pattern:
-      enabled: true
-      similarity_threshold: 0.8
-```
-
-### Visualization Configuration
-
-Edit `config/visualization_config.yaml`:
-
-```yaml
-visualization:
-  dashboard:
-    port: 8050
-    refresh_interval: 5
-  alerts:
-    email:
-      enabled: true
-      recipients: ["admin@example.com"]
-    slack:
-      enabled: false
-      webhook_url: ""
-```
-
-## Examples
-
-### Example 1: Monitor HDFS Logs for Anomalies
+Analyze error patterns and their evolution:
 
 ```python
-# Load and parse HDFS logs
-loader = LogLoader()
-parser = LogParser()
-logs = loader.load_from_file("data/raw/HDFS/HDFS.log")
-parsed_logs = parser.parse(logs)
+# Initialize analyzer
+analyzer = error_analyzer.ErrorPatternAnalyzer()
 
-# Extract features
-extractor = FeatureExtractor()
-features = extractor.extract(parsed_logs)
-
-# Detect anomalies
-detector = AnomalyDetector()
-anomalies = detector.detect(features)
-
-# Visualize results
-visualizer = MetricsVisualizer()
-visualizer.plot_anomalies(anomalies)
+# Analyze patterns
+patterns = analyzer.analyze_patterns(
+    processed_data,
+    pattern_window='24H',
+    min_occurrence=5
+)
 ```
 
-### Example 2: Real-time Apache Server Monitoring
+### 3. Component Interaction Analysis
+
+Study interactions between system components:
 
 ```python
-# Set up Kafka producer
-producer = KafkaProducer()
+# Initialize analyzer
+component_analyzer = interaction_analyzer.ComponentAnalyzer()
 
-# Set up drift detector
-detector = ErrorRateDriftDetector()
-
-# Set up alert manager
-alert_manager = AlertManager()
-
-# Process incoming logs
-def process_apache_log(log):
-    parsed_log = parser.parse_line(log)
-    drift = detector.detect_incremental(parsed_log)
-    if drift.is_drift_detected:
-        alert_manager.send_alert(drift)
-
-# Start monitoring
-producer.consume_topic("apache_logs", process_apache_log)
+# Analyze interactions
+interactions = component_analyzer.analyze_interactions(
+    processed_data,
+    component_list=['namenode', 'datanode'],
+    time_window='1D'
+)
 ```
 
 ## Best Practices
 
-1. **Log Sampling**: For large log volumes, consider sampling to reduce processing load
-2. **Baseline Establishment**: Establish a good baseline before monitoring for drift
-3. **Threshold Tuning**: Adjust detection thresholds based on your specific system
-4. **Alert Management**: Configure alerts to avoid notification fatigue
-5. **Performance Optimization**: Use batch processing for large log volumes 
+1. **Data Preprocessing**
+   - Clean and validate raw logs before processing
+   - Handle missing or malformed entries
+   - Standardize timestamp formats
+
+2. **Feature Engineering**
+   - Select appropriate time windows based on system behavior
+   - Include domain-specific features
+   - Normalize features when necessary
+
+3. **Drift Detection**
+   - Establish stable baseline periods
+   - Set appropriate thresholds
+   - Validate detection results
+
+4. **Visualization**
+   - Use appropriate visualizations for different metrics
+   - Include temporal context
+   - Highlight significant changes
+
+## Configuration
+
+### System Configuration
+
+Edit `config/config.yaml`:
+
+```yaml
+preprocessing:
+  time_format: '%Y-%m-%d %H:%M:%S'
+  batch_size: 10000
+  
+feature_extraction:
+  default_window: '1H'
+  pattern_threshold: 0.1
+  
+drift_detection:
+  baseline_period: '7D'
+  detection_window: '1D'
+  alert_threshold: 0.8
+```
+
+### Environment Variables
+
+Required environment variables:
+
+```bash
+export LOG_LEVEL=INFO
+export DATA_DIR=datasets/raw_drift_dataset
+export PROCESSED_DIR=datasets/processed
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Data Processing Errors**
+   ```python
+   # Validate log format
+   processor.validate_logs(input_path)
+   
+   # Check processing status
+   processor.get_processing_status()
+   ```
+
+2. **Feature Extraction Issues**
+   ```python
+   # Verify feature completeness
+   extractor.validate_features(features)
+   
+   # Check feature statistics
+   extractor.get_feature_stats(features)
+   ```
+
+3. **Drift Detection Problems**
+   ```python
+   # Validate detection parameters
+   detector.validate_parameters()
+   
+   # Check detection sensitivity
+   detector.analyze_sensitivity(features)
+   ```
+
+## Advanced Usage
+
+### Custom Feature Engineering
+
+Create custom feature extractors:
+
+```python
+class CustomFeatureExtractor(BaseExtractor):
+    def extract_features(self, data):
+        # Custom feature extraction logic
+        pass
+```
+
+### Custom Drift Detection
+
+Implement custom drift detection algorithms:
+
+```python
+class CustomDriftDetector(BaseDriftDetector):
+    def detect_drift(self, features):
+        # Custom drift detection logic
+        pass
+```
+
+## Next Steps
+
+1. Explore advanced features in the documentation
+2. Check example implementations in the source code
+3. Contribute to the project development
+4. Report issues and suggest improvements 

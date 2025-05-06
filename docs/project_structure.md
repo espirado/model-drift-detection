@@ -1,100 +1,81 @@
 # Project Structure
 
-This document outlines the organization of the System Reliability Drift Detection project.
+## Overview
+This document outlines the structure of the Model Drift Detection project, designed for analyzing system logs and detecting drift patterns.
 
 ## Directory Structure
 
 ```
 model-drift-detection/
-├── data/                  # Log datasets from Loghub
-│   ├── raw/               # Raw log files
-│   ├── processed/         # Processed and parsed logs
-│   └── README.md          # Dataset documentation
-├── src/
-│   ├── ingestion/         # Log ingestion from Kafka
-│   │   ├── kafka_producer.py
-│   │   └── log_loader.py
-│   ├── parsing/           # Log parsing and feature extraction
-│   │   ├── log_parser.py
-│   │   ├── feature_extractor.py
-│   │   └── pattern_analyzer.py
-│   ├── detection/         # Drift detection algorithms
-│   │   ├── distribution_drift.py
-│   │   ├── error_rate_drift.py
-│   │   ├── pattern_drift.py
-│   │   └── anomaly_detector.py
-│   ├── visualization/     # Dashboards and alerts
-│   │   ├── dashboard.py
-│   │   ├── alert_manager.py
-│   │   └── metrics_visualizer.py
-│   └── utils/             # Utility functions
-│       ├── config.py
-│       ├── logging.py
-│       └── helpers.py
-├── config/                # Configuration files
-│   ├── kafka_config.yaml
-│   ├── detection_config.yaml
-│   └── visualization_config.yaml
-├── docs/                  # Documentation
-│   ├── setup.md
-│   ├── usage.md
-│   └── project_structure.md
-├── tests/                 # Test files
-│   ├── test_parsing.py
-│   ├── test_detection.py
-│   └── test_visualization.py
-├── requirements.txt       # Python dependencies
-└── README.md              # Project overview
+├── config/                 # Configuration files
+├── datasets/              
+│   ├── processed/         # Processed log data
+│   └── raw_drift_dataset/ # Raw log files
+│       ├── Apache/
+│       ├── BGL/
+│       ├── HDFS/
+│       ├── HealthApp/
+│       ├── HPC/
+│       ├── Linux/
+│       └── Mac/
+├── docs/                  # Project documentation
+│   ├── architecture/      # System architecture docs
+│   ├── data-mining/       # Data analysis documentation
+│   └── user-guide/        # User documentation
+├── phase1/               # Initial analysis phase
+├── phase2/               # Advanced analysis phase
+└── src/                  # Source code
+    ├── alerts/           # Alert system components
+    ├── config/           # Configuration management
+    ├── dashboard/        # Visualization dashboard
+    ├── data/            # Data handling utilities
+    ├── detection/       # Drift detection algorithms
+    ├── features/        # Feature engineering
+    └── preprocessing/   # Data preprocessing
 ```
 
-## Component Descriptions
+## Key Components
 
-### Data Directory
-- **raw/**: Contains the original log files from Loghub
-- **processed/**: Contains parsed and processed log data ready for analysis
-- **README.md**: Documentation of available datasets and their characteristics
+### Source Code (`src/`)
+- **preprocessing/**: Log parsing and initial data processing
+- **features/**: Feature extraction and engineering
+- **detection/**: Drift detection algorithms
+- **dashboard/**: Visualization and monitoring interface
+- **alerts/**: Alert generation and management
+- **data/**: Data handling and storage utilities
+- **config/**: Configuration management
 
-### Source Code (src/)
+### Documentation (`docs/`)
+- **architecture/**: System design and architecture documentation
+- **data-mining/**: Analysis methodology and findings
+- **user-guide/**: Usage instructions and examples
 
-#### Ingestion Module
-- **kafka_producer.py**: Handles streaming logs to Kafka
-- **log_loader.py**: Loads logs from files or other sources
+### Data (`datasets/`)
+- **raw_drift_dataset/**: Original log files from various systems
+- **processed/**: Cleaned and processed data ready for analysis
 
-#### Parsing Module
-- **log_parser.py**: Parses raw logs into structured formats
-- **feature_extractor.py**: Extracts relevant features from parsed logs
-- **pattern_analyzer.py**: Analyzes log patterns for drift detection
+### Configuration (`config/`)
+- System configuration files
+- Parameter settings
+- Environment configurations
 
-#### Detection Module
-- **distribution_drift.py**: Implements distribution-based drift detection
-- **error_rate_drift.py**: Monitors for changes in error rates
-- **pattern_drift.py**: Detects shifts in log message patterns
-- **anomaly_detector.py**: Identifies anomalies in log streams
+## Development Phases
 
-#### Visualization Module
-- **dashboard.py**: Creates real-time monitoring dashboards
-- **alert_manager.py**: Manages and sends alerts for detected drift
-- **metrics_visualizer.py**: Visualizes reliability metrics
+### Phase 1
+- Initial data exploration
+- Basic preprocessing
+- Preliminary analysis
 
-#### Utilities
-- **config.py**: Configuration management
-- **logging.py**: Logging utilities
-- **helpers.py**: Helper functions used across modules
+### Phase 2
+- Advanced feature engineering
+- Drift detection implementation
+- System integration
+- Performance optimization
 
-### Configuration (config/)
-- **kafka_config.yaml**: Kafka connection and topic settings
-- **detection_config.yaml**: Drift detection algorithm parameters
-- **visualization_config.yaml**: Dashboard and visualization settings
-
-### Documentation (docs/)
-- **setup.md**: Installation and setup instructions
-- **usage.md**: Usage examples and API documentation
-- **project_structure.md**: This document
-
-### Tests (tests/)
-- Unit and integration tests for each module
-
-## Key Files
-
-- **requirements.txt**: Lists all Python dependencies
-- **README.md**: Project overview and getting started guide 
+## Testing
+The `tests/` directory contains unit tests and integration tests for each component:
+- Data preprocessing tests
+- Feature extraction tests
+- Drift detection algorithm tests
+- Alert system tests
+- Dashboard functionality tests 

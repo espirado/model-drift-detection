@@ -1,114 +1,102 @@
 # Setup Guide
 
-This guide will help you set up the System Reliability Drift Detection project.
-
 ## Prerequisites
 
 - Python 3.8 or higher
-- Apache Kafka
-- Git
+- pip (Python package installer)
+- Virtual environment (recommended)
 
-## Installation
+## Installation Steps
 
-### 1. Clone the Repository
-
+1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/model-drift-detection.git
+git clone [repository-url]
 cd model-drift-detection
 ```
 
-### 2. Set Up a Virtual Environment
-
+2. Create and activate a virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
 ```
 
-### 3. Install Dependencies
-
+3. Install required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Download Log Datasets
+## Required Packages
 
-Download the log datasets from Loghub:
+The project requires the following main packages:
+- pandas>=2.2.0
+- numpy>=1.24.0
+- matplotlib>=3.10.0
+- seaborn>=0.13.0
+- scikit-learn>=1.3.0
+- jupyter>=1.0.0
+- ipykernel>=6.29.0
 
-```bash
-# Create data directories
-mkdir -p data/raw data/processed
+## Data Setup
 
-# Download HDFS logs
-wget https://zenodo.org/records/8196385/files/HDFS.tar.gz?download=1 -O data/raw/HDFS.tar.gz
-tar -xzf data/raw/HDFS.tar.gz -C data/raw/
-
-# Download Apache logs
-wget https://zenodo.org/records/8196385/files/Apache.tar.gz?download=1 -O data/raw/Apache.tar.gz
-tar -xzf data/raw/Apache.tar.gz -C data/raw/
-
-# Download HealthApp logs
-wget https://zenodo.org/records/8196385/files/HealthApp.tar.gz?download=1 -O data/raw/HealthApp.tar.gz
-tar -xzf data/raw/HealthApp.tar.gz -C data/raw/
-
-# Download OpenSSH logs
-wget https://zenodo.org/records/8196385/files/SSH.tar.gz?download=1 -O data/raw/OpenSSH.tar.gz
-tar -xzf data/raw/OpenSSH.tar.gz -C data/raw/
+1. Ensure the raw log datasets are placed in the correct directories:
+```
+datasets/raw_drift_dataset/
+├── Apache/
+├── BGL/
+├── HDFS/
+├── HealthApp/
+├── HPC/
+├── Linux/
+└── Mac/
 ```
 
-### 5. Set Up Apache Kafka
-
-#### Using Docker (Recommended)
-
+2. Create necessary directories for processed data:
 ```bash
-# Start Zookeeper
-docker run -d --name zookeeper -p 2181:2181 wurstmeister/zookeeper
-
-# Start Kafka
-docker run -d --name kafka -p 9092:9092 \
-  -e KAFKA_ADVERTISED_HOST_NAME=localhost \
-  -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
-  wurstmeister/kafka
+mkdir -p datasets/processed
 ```
 
-#### Manual Installation
+## Configuration
 
-1. Download Kafka from [https://kafka.apache.org/downloads](https://kafka.apache.org/downloads)
-2. Extract the archive
-3. Start Zookeeper: `bin/zookeeper-server-start.sh config/zookeeper.properties`
-4. Start Kafka: `bin/kafka-server-start.sh config/server.properties`
+1. System Configuration:
+   - Copy `config/config.example.yaml` to `config/config.yaml`
+   - Update parameters according to your environment
 
-### 6. Configure the Project
+2. Environment Variables:
+   - Create a `.env` file in the project root
+   - Set required environment variables:
+     ```
+     LOG_LEVEL=INFO
+     DATA_DIR=datasets/raw_drift_dataset
+     PROCESSED_DIR=datasets/processed
+     ```
 
-Edit the configuration files in the `config/` directory to match your environment:
+## Development Environment Setup
 
-- `kafka_config.yaml`: Set your Kafka broker address and topic names
-- `detection_config.yaml`: Adjust drift detection parameters
-- `visualization_config.yaml`: Configure dashboard settings
-
-## Running the Project
-
-### 1. Start the Log Ingestion
-
+1. Install development dependencies:
 ```bash
-python src/ingestion/log_loader.py --dataset HDFS
+pip install -r requirements-dev.txt
 ```
 
-### 2. Start the Drift Detection
-
+2. Set up pre-commit hooks:
 ```bash
-python src/detection/distribution_drift.py
+pre-commit install
 ```
 
-### 3. Launch the Dashboard
+3. Configure IDE settings:
+   - Set Python interpreter to virtual environment
+   - Enable linting (flake8, pylint)
+   - Configure code formatting (black)
 
+## Testing Environment
+
+1. Install test dependencies:
 ```bash
-python src/visualization/dashboard.py
+pip install -r requirements-test.txt
 ```
 
-## Testing
-
-Run the test suite:
-
+2. Run tests:
 ```bash
 python -m pytest tests/
 ```
@@ -117,20 +105,36 @@ python -m pytest tests/
 
 ### Common Issues
 
-1. **Kafka Connection Errors**
-   - Ensure Kafka is running: `docker ps` or check Kafka logs
-   - Verify the broker address in `config/kafka_config.yaml`
+1. Package Installation Errors:
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt --no-cache-dir
+   ```
 
-2. **Log Parsing Errors**
-   - Check log format compatibility
-   - Verify log file paths in configuration
+2. Virtual Environment Issues:
+   ```bash
+   deactivate
+   rm -rf .venv
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
 
-3. **Memory Issues**
-   - Reduce batch size in configuration
-   - Process smaller log chunks
+3. Data Directory Permissions:
+   ```bash
+   chmod -R 755 datasets/
+   ```
+
+### Support
+
+For additional support:
+1. Check the issues section in the repository
+2. Contact the development team
+3. Refer to the documentation in `docs/`
 
 ## Next Steps
 
-- Explore the [Usage Guide](usage.md) for detailed examples
-- Check the [Project Structure](project_structure.md) for an overview of the codebase
-- Contribute to the project by following the contribution guidelines 
+After completing the setup:
+1. Review the user guide in `docs/user-guide/`
+2. Explore example notebooks in `notebooks/`
+3. Run initial tests to verify setup
+4. Start with data preprocessing using the provided scripts 
